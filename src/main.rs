@@ -10,12 +10,24 @@ fn main() {
         match stream {
             Ok(mut _stream) => {
                 println!("accepted new connection");
-                _stream.read(&mut [0; 128]).unwrap();
-                _stream.write_all(b"HTTP/1.1 200 OK\r\n\r\n").unwrap();
+                let mut buf = [0; 512];
+                _stream.read(&mut buf).unwrap();
+                let path = handle(&mut buf);
+                if path == "/" {
+                    _stream.write_all(b"HTTP/1.1 200 OK\r\n\r\n").unwrap();
+                } else {
+                    _stream.write_all(b"HTTP/1.1 404 NotFound\r\n\r\n").unwrap();
+                }
             }
             Err(e) => {
                 println!("error: {}", e);
             }
         }
     }
+}
+
+fn handle(buf: &mut [u8]) -> String {
+    let data = String::from_utf8(buf.to_vec()).unwrap();
+    let first_line = data.split_once("\r\n\r\n").unwrap().0;
+    return first_line.split(" ").nth(1).unwrap().to_string();
 }
