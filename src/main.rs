@@ -1,29 +1,26 @@
-use std::io::{Read, Write};
-use std::net::{TcpListener, TcpStream};
+use tokio::io::{AsyncReadExt, AsyncWriteExt};
+use tokio::net::{TcpListener, TcpStream};
 
-fn main() {
+#[tokio::main]
+async fn main() -> anyhow::Result<()> {
     println!("Logs from your program will appear here!");
 
-    let listener = TcpListener::bind("127.0.0.1:4221").unwrap();
-
-    for stream in listener.incoming() {
-        match stream {
-            Ok(mut _stream) => {
-                println!("accepted new connection");
-                let mut buf = [0; 512];
-                _stream.read(&mut buf).unwrap();
-                let path = get_path(&mut buf);
-                if path == "/" {
-                    _stream.write_all(b"HTTP/1.1 200 OK\r\n\r\n").unwrap();
-                } else {
-                    let data = get_data(&mut buf);
-                    handle(path, data, &mut _stream);
-                }
+    let listener = TcpListener::bind("127.0.0.1:4221").await?;
+    loop {
+        let (mut stream, _) = listener.accept().await?;
+        tokio::task::spawn(async move {
+            println!("accepted new connection");
+            let mut buf = [0; 512];
+            stream.read(&mut buf).await?;
+            let path = get_path(&mut buf);
+            if path == "/" {
+                stream.write_all(b"HTTP/1.1 200 OK\r\n\r\n").await?;
+            } else {
+                let data = get_data(&mut buf);
+                handle(path, data, &mut stream).await?;
             }
-            Err(e) => {
-                println!("error: {}", e);
-            }
-        }
+            Ok::<(), anyhow::Error>(())
+        });
     }
 }
 
@@ -39,7 +36,7 @@ fn get_data(buf: &mut [u8]) -> String {
     return rest.to_string();
 }
 
-fn handle(path: String, data: String, stream: &mut TcpStream) {
+async fn handle(path: String, data: String, stream: &mut TcpStream) -> anyhow::Result<()> {
     let all: Vec<&str> = path.split("/").collect(); // First element is empty
     let segments = &all[1..];
     if segments.len() >= 2 {
@@ -51,12 +48,13 @@ Content-Type: text/plain\r\n\
 Content-Length: {}\r\n\
 \r\n\
 {}\r\n", echo.len(), echo);
-            stream.write_all(resp.as_bytes()).unwrap();
-            return;
+            stream.write_all(resp.as_bytes()).await?;
+        } else {
+            stream.write_all(b"HTTP/1.1 404 NOT FOUND\r\n\r\n").await?;
         }
     } else {
         if segments[0] == "user-agent" {
-            data.split("\r\n").for_each(|line| {
+            for line in data.split("\r\n") {
                 if line.starts_with("User-Agent: ") {
                     let ua = line.split_once("User-Agent: ").unwrap().1;
                     let resp = format!("\
@@ -65,11 +63,12 @@ Content-Type: text/plain\r\n\
 Content-Length: {}\r\n\
 \r\n\
 {}\r\n", ua.len(), ua);
-                    stream.write_all(resp.as_bytes()).unwrap();
+                    stream.write_all(resp.as_bytes()).await?;
                 }
-            });
-            return;
+            };
+        } else {
+            stream.write_all(b"HTTP/1.1 404 NOT FOUND\r\n\r\n").await?;
         }
     }
-    stream.write_all(b"HTTP/1.1 404 NOT FOUND\r\n\r\n").unwrap();
+    Ok(())
 }
