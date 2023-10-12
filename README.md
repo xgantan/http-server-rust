@@ -1,39 +1,11 @@
-[![progress-banner](https://backend.codecrafters.io/progress/http-server/78e1b7b5-1441-452b-ac25-d6ccd8bef9d2)](https://app.codecrafters.io/users/XiaonuoGantan?r=2qF)
+# Overview
 
-This is a starting point for Rust solutions to the
-["Build Your Own HTTP server" Challenge](https://app.codecrafters.io/courses/http-server/overview).
+This is a toy HTTP server that implements:
 
-[HTTP](https://en.wikipedia.org/wiki/Hypertext_Transfer_Protocol) is the
-protocol that powers the web. In this challenge, you'll build a HTTP/1.1 server
-that is capable of serving multiple clients.
+`GET /`: Return 200 Ok
+`GET /echo/data`: Return a 200 Ok response with the `data` as its body
+`GET /user-agent`: Return a 200 Ok response wih the request's `User-Agent` header value
+`GET /files/test.txt`: Return whether `test.txt` exists in the dir of `--directory <dir>`
+`POST /files/test.txt -d @test.txt`: Accept the request body and save it to `--directory <dir>`
 
-Along the way you'll learn about TCP servers,
-[HTTP request syntax](https://www.w3.org/Protocols/rfc2616/rfc2616-sec5.html),
-and more.
-
-**Note**: If you're viewing this repo on GitHub, head over to
-[codecrafters.io](https://codecrafters.io) to try the challenge.
-
-# Passing the first stage
-
-The entry point for your HTTP server implementation is in `src/main.rs`. Study
-and uncomment the relevant code, and push your changes to pass the first stage:
-
-```sh
-git add .
-git commit -m "pass 1st stage" # any msg
-git push origin master
-```
-
-Time to move on to the next stage!
-
-# Stage 2 & beyond
-
-Note: This section is for stages 2 and beyond.
-
-1. Ensure you have `cargo (1.70)` installed locally
-1. Run `./your_server.sh` to run your program, which is implemented in
-   `src/main.rs`. This command compiles your Rust project, so it might be slow
-   the first time you run it. Subsequent runs will be fast.
-1. Commit your changes and run `git push origin master` to submit your solution
-   to CodeCrafters. Test output will be streamed to your terminal.
+The purpose of this repository is to showcase the various capabilities of the Rust programming language.
