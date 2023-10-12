@@ -7,7 +7,7 @@ use tokio::net::{TcpListener, TcpStream};
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-    println!("Logs from your program will appear here!");
+    println!("Logs from your program will appear here! Listening on 127.0.0.1:4221...");
     let args: Vec<String> = std::env::args().collect();
     let mut target_dir: Option<String> = None;
     if let Some(index) = args.iter().position(|arg| arg == "--directory") {
